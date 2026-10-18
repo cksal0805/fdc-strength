@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>프다클 강점 찾기</title>
+<style>
+  /* Layout: 한 화면 모바일 검사 — 상단 진행바, 가운데 질문, 하단 5단계 응답 버튼 */
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --fg: #191f28;
+    --sub: #6b7684;
+    --line: #e5e8eb;
+    --chip: #e9ebef;
+    --accent: #3182f6;
+    --stone: #3182f6;
+    --a5-bg: #dbe8f7; --a5-fg: #2b6fd6;
+    --a4-bg: #e7eef6; --a4-fg: #3b7ddb;
+    --a3-bg: #eaebee; --a3-fg: #333d4b;
+    --a2-bg: #f6f1dc; --a2-fg: #d4861a;
+    --a1-bg: #f4ebcb; --a1-fg: #c97a0c;
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141519; --surface: #1d1f25; --fg: #f2f4f6; --sub: #9ba3ae; --line: #2c2f36; --chip: #2a2d34;
+      --accent: #5c9dff; --stone: #5c9dff;
+      --a5-bg: #1c3150; --a5-fg: #86b6ff;
+      --a4-bg: #1d2939; --a4-fg: #93b9ee;
+      --a3-bg: #292c33; --a3-fg: #d1d6db;
+      --a2-bg: #36301d; --a2-fg: #eeb25a;
+      --a1-bg: #42361a; --a1-fg: #f3ad45;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141519; --surface: #1d1f25; --fg: #f2f4f6; --sub: #9ba3ae; --line: #2c2f36; --chip: #2a2d34;
+    --accent: #5c9dff; --stone: #5c9dff;
+    --a5-bg: #1c3150; --a5-fg: #86b6ff;
+    --a4-bg: #1d2939; --a4-fg: #93b9ee;
+    --a3-bg: #292c33; --a3-fg: #d1d6db;
+    --a2-bg: #36301d; --a2-fg: #eeb25a;
+    --a1-bg: #42361a; --a1-fg: #f3ad45;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font);
+    -webkit-font-smoothing: antialiased; word-break: keep-all;
+  }
+  .app {
+    max-width: 440px; min-height: 100%; margin: 0 auto; box-sizing: border-box;
+    display: flex; flex-direction: column;
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
+    padding-block: 12px 24px;
+  }
+  .screen { flex: 1; display: flex; flex-direction: column; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .chip {
+    display: inline-flex; align-items: center; height: 30px; padding: 0 12px;
+    border-radius: 15px; background: var(--chip); color: var(--sub);
+    font-size: 13px; font-weight: 500;
+  }
+
+  /* 시작 화면 */
+  .intro { justify-content: space-between; gap: 32px; padding-top: 40px; }
+  .intro h1 { font-size: 28px; line-height: 1.35; font-weight: 700; margin: 16px 0 12px; text-wrap: balance; letter-spacing: -0.02em; }
+  .intro p { font-size: 16px; line-height: 1.65; color: var(--sub); margin: 0; }
+  .meta { font-size: 13px; color: var(--sub); text-align: center; margin: 12px 0 0; }
+  .primary {
+    width: 100%; height: 56px; border-radius: 16px; background: var(--accent); color: #fff;
+    font-size: 17px; font-weight: 600;
+  }
+
+  /* 질문 화면 */
+  .topbar { height: 44px; display: flex; align-items: center; }
+  .back { width: 40px; height: 40px; margin-left: -10px; display: grid; place-items: center; border-radius: 10px; }
+  .back svg { width: 24px; height: 24px; stroke: var(--fg); }
+  .progress-row { display: flex; align-items: center; justify-content: flex-end; margin-top: 8px; }
+  .progress { flex: 1; display: flex; align-items: center; gap: 12px; }
+  .bar { flex: 1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--sub); border-radius: 2px; transition: width .25s ease; }
+  .count { font-size: 14px; color: var(--sub); font-variant-numeric: tabular-nums; }
+  .question {
+    flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center;
+    padding: 40px 8px; min-height: 220px;
+  }
+  .question .ctx { font-size: 16px; line-height: 1.75; color: var(--sub); margin: 0 0 16px; text-wrap: balance; }
+  .question .stmt { font-size: 21px; line-height: 1.45; font-weight: 700; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  .answers { display: flex; flex-direction: column; gap: 10px; }
+  .answer {
+    height: 64px; border-radius: 18px; font-size: 16px; font-weight: 500;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .answer:active { transform: scale(0.98); }
+  .answer:hover { filter: brightness(0.97); }
+  .answer.picked { outline: 2px solid currentColor; outline-offset: -2px; }
+  .a5 { background: var(--a5-bg); color: var(--a5-fg); }
+  .a4 { background: var(--a4-bg); color: var(--a4-fg); }
+  .a3 { background: var(--a3-bg); color: var(--a3-fg); }
+  .a2 { background: var(--a2-bg); color: var(--a2-fg); }
+  .a1 { background: var(--a1-bg); color: var(--a1-fg); }
+
+  /* 결과 화면 */
+  .result { gap: 20px; padding-top: 8px; }
+  .hero { text-align: center; padding: 16px 0 4px; }
+  .hero .eyebrow { font-size: 15px; color: var(--sub); margin: 0 0 20px; }
+  .card {
+    width: 190px; max-width: 100%; aspect-ratio: 5 / 7; margin: 0 auto 24px; box-sizing: border-box;
+    background: var(--surface); border-radius: 20px; padding: 20px 18px;
+    display: flex; flex-direction: column; justify-content: space-between; text-align: left;
+    box-shadow: 0 10px 30px rgba(25, 31, 40, 0.10); transform: rotate(-3deg);
+  }
+  .card .no { font-size: 13px; font-weight: 700; color: var(--stone); letter-spacing: 0.04em; }
+  .card .big { font-size: 64px; font-weight: 800; line-height: 1; color: var(--stone); opacity: .9; }
+  .card .name { font-size: 17px; font-weight: 700; line-height: 1.4; text-wrap: balance; }
+  .hero h2 { font-size: 24px; line-height: 1.4; margin: 0 0 8px; text-wrap: balance; letter-spacing: -0.02em; }
+  .hero .nick { font-size: 15px; color: var(--stone); margin: 0; font-weight: 500; }
+
+  .panel { background: var(--surface); border-radius: 20px; padding: 22px 20px; }
+  .panel h3 { font-size: 15px; font-weight: 700; margin: 0 0 12px; }
+  .panel p { font-size: 15px; line-height: 1.7; margin: 0; color: var(--fg); }
+  .panel .note { color: var(--sub); font-size: 14px; margin-top: 10px; }
+
+  .scores { display: flex; flex-direction: column; gap: 12px; }
+  .score { display: grid; grid-template-columns: 22px minmax(0, 1fr) 34px; align-items: center; gap: 10px; font-size: 14px; }
+  .score .n { color: var(--sub); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .score .lbl { min-width: 0; }
+  .score .lbl span { display: block; margin-bottom: 6px; line-height: 1.4; }
+  .score .track { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .score .track i { display: block; height: 100%; border-radius: 3px; background: var(--sub); }
+  .score.top .track i { background: var(--accent); }
+  .score.top .lbl span { font-weight: 600; }
+  .score .v { text-align: right; color: var(--sub); font-variant-numeric: tabular-nums; }
+
+  .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: s; }
+  .steps li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; font-size: 15px; line-height: 1.6; counter-increment: s; }
+  .steps li::before {
+    content: counter(s); width: 24px; height: 24px; border-radius: 12px; background: var(--chip); color: var(--sub);
+    font-size: 13px; font-weight: 700; display: grid; place-items: center; margin-top: 1px;
+  }
+  .steps b { font-weight: 600; }
+  .ghost { width: 100%; height: 52px; border-radius: 16px; background: var(--chip); color: var(--fg); font-size: 16px; font-weight: 600; }
+
+  .fade { animation: fade .28s ease both; }
+  @keyframes fade { from { opacity: .4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .fade { animation: none; }
+    .bar span, .answer { transition: none; }
+  }
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+  const STRENGTHS = [
+    { name: "복잡한 문제를 잘게 나누는 사람", nick: "큰 바위를 쪼개 돌도끼를 만드는 사람",
+      ai: "AI는 잘게 나뉜 문제에서 가장 잘 일합니다. 문제를 어디서 어떻게 자를지 정하는 일은 여전히 사람의 몫이에요.",
+      talk: "최근에 큰 덩어리 일을 쪼개서 풀어낸 경험이 있나요? 어디서부터 잘랐나요?" },
+    { name: "버그를 끝까지 추적하는 사람", nick: "발자국을 끝까지 쫓는 사냥꾼",
+      ai: "AI가 만든 코드가 늘어날수록, 왜 깨졌는지 끝까지 쫓아가는 사람이 더 귀해집니다.",
+      talk: "지금까지 잡은 버그 중 가장 오래 쫓았던 녀석은 무엇이었나요?" },
+    { name: "동료에게 쉽게 설명하는 사람", nick: "모닥불 앞에서 이야기를 전하는 사람",
+      ai: "AI 답변은 넘쳐나지만, 상대의 맥락에 맞춰 풀어주는 일은 사람이 합니다. 지식을 팀의 것으로 만드는 힘이에요.",
+      talk: "누군가에게 설명하다가 오히려 내가 더 잘 이해하게 된 순간이 있었나요?" },
+    { name: "일단 만들어보며 답을 찾는 사람", nick: "일단 부싯돌부터 부딪쳐보는 사람",
+      ai: "만드는 비용이 거의 0이 된 시대에는, 먼저 만들어보는 사람이 가장 빨리 배웁니다.",
+      talk: "일단 만들어봤더니 회의 열 번보다 빨리 답이 나왔던 경험을 들려주세요." },
+    { name: "아무도 묻지 않는 왜를 묻는 사람", nick: "동굴 밖이 왜 밝은지 궁금해하는 사람",
+      ai: "AI는 '어떻게'에는 답하지만 '왜'는 먼저 묻지 않아요. 방향을 정하는 질문은 사람에게서 나옵니다.",
+      talk: "\"근데 이거 왜 해요?\"라는 질문 하나로 방향이 바뀐 적이 있나요?" },
+    { name: "팀이 놓친 부분을 발견하는 사람", nick: "무리가 못 본 맹수를 먼저 알아채는 사람",
+      ai: "AI는 시킨 것만 봅니다. 아무도 시키지 않은 빈틈을 알아보는 눈이 팀과 사용자를 지켜요.",
+      talk: "모두가 지나친 걸 혼자 발견했던 순간은 언제였나요? 어떻게 알아챘나요?" },
+  ];
+
+  // s: 강점 인덱스(0~5). 같은 강점이 연달아 나오지 않도록 섞어 둔 순서.
+  const QUESTIONS = [
+    { s: 0, ctx: "기획서에 \"검색 기능 리뉴얼\" 한 줄만 적혀 있다. 막막해하기 전에 나는", stmt: "할 일 목록부터 잘게 쪼개고 있다." },
+    { s: 1, ctx: "금요일 오후 6시, \"가끔 버튼이 안 눌려요\"라는 제보가 왔다. 재현도 잘 안 된다. 그래도 나는", stmt: "원인을 찾을 때까지 놓지 못한다." },
+    { s: 2, ctx: "새로 온 동료가 \"useEffect가 왜 두 번 실행돼요?\"라고 묻는다. 나는", stmt: "비유를 섞어 쉽게 풀어주는 게 즐겁다." },
+    { s: 3, ctx: "처음 써보는 라이브러리로 새 기능을 만들어야 한다. 문서를 정독하기 전에 나는", stmt: "일단 코드부터 쳐보고 있다." },
+    { s: 4, ctx: "회의에서 모두가 \"이번 분기엔 다크 모드죠\" 하며 고개를 끄덕인다. 그 순간 나는", stmt: "\"근데 이걸 왜 해야 하죠?\"가 입 끝까지 차오른다." },
+    { s: 5, ctx: "PR 리뷰를 할 때, 다들 기능 코드를 볼 때 나는", stmt: "빈 화면, 에러 상태, 접근성부터 확인한다." },
+    { s: 0, ctx: "AI에게 큰 작업을 맡길 때도 나는", stmt: "단계별로 나눠서 하나씩 시킨다." },
+    { s: 1, ctx: "AI가 짜준 코드가 돌아가긴 하는데, 왜 되는지는 모르겠다. 나는", stmt: "이해될 때까지 끝까지 파고든다." },
+    { s: 2, ctx: "디자이너와 백엔드 개발자가 같은 이야기를 서로 다른 말로 하고 있다. 나는", stmt: "중간에서 양쪽 언어로 정리해준다." },
+    { s: 3, ctx: "두 가지 구현 방법을 두고 회의가 30분째 이어진다. 나는", stmt: "\"둘 다 만들어서 비교해봐요\"라고 말하고 싶다." },
+    { s: 4, ctx: "오래된 코드에 \"절대 건드리지 마시오\"라는 주석이 붙어 있다. 나는", stmt: "왜 그런지 커밋 히스토리부터 궁금하다." },
+    { s: 5, ctx: "배포 직전 체크리스트를 훑어보면 나는", stmt: "아무도 적지 않은 항목이 눈에 들어온다." },
+    { s: 0, ctx: "스프린트 회의에서 \"3일이면 될 것 같아요\"라는 말이 나오면 나는", stmt: "작업을 단위별로 나눠서 다시 계산해본다." },
+    { s: 1, ctx: "콘솔에 가끔 뜨는 경고 하나, 다들 무시하고 지나간다. 나는", stmt: "그 경고가 어디서 오는지 기어이 찾아본다." },
+    { s: 2, ctx: "복잡한 기술 결정을 비개발자 동료에게 공유해야 한다. 나는", stmt: "그림 한 장으로 설명할 방법부터 떠올린다." },
+    { s: 3, ctx: "디자인 시안이 아직 나오지 않았다. 기다리는 대신 나는", stmt: "대충이라도 프로토타입을 먼저 띄워본다." },
+    { s: 4, ctx: "\"원래 이렇게 해왔어요\"라는 말을 들으면 나는", stmt: "그 '원래'가 언제부터였는지 궁금해진다." },
+    { s: 5, ctx: "새로 만든 화면을 보면 나는", stmt: "긴 텍스트, 느린 네트워크, 작은 화면에서 어떻게 보일지 먼저 떠올린다." },
+    { s: 0, ctx: "처음 보는 거대한 레거시 컴포넌트를 리팩터링해야 한다. 나는", stmt: "어디부터 떼어낼지 지도부터 그린다." },
+    { s: 1, ctx: "프로덕션에서만 터지는 에러를 만났다. 나는", stmt: "로그와 소스맵을 뒤지는 시간이 오히려 즐겁다." },
+    { s: 2, ctx: "어렵게 해결한 문제가 있으면 나는", stmt: "팀 문서나 블로그에 정리해서 나누고 싶어진다." },
+    { s: 3, ctx: "새로운 AI 도구가 나왔다는 소식을 들으면 나는", stmt: "그날 바로 설치해서 뭐라도 만들어본다." },
+    { s: 4, ctx: "기능 요청 티켓을 받으면 구현 방법을 고민하기 전에", stmt: "이 기능이 풀려는 진짜 문제가 뭔지 묻는다." },
+    { s: 5, ctx: "모두가 \"완벽하다\"며 데모를 마친 순간 나는", stmt: "아직 아무도 말하지 않은 문제가 하나 보인다." },
+  ];
+
+  const ANSWERS = [
+    { v: 5, label: "매우 그렇다", cls: "a5" },
+    { v: 4, label: "그렇다", cls: "a4" },
+    { v: 3, label: "보통이다", cls: "a3" },
+    { v: 2, label: "아니다", cls: "a2" },
+    { v: 1, label: "매우 아니다", cls: "a1" },
+  ];
+
+  const app = document.getElementById("app");
+  let step = -1;                 // -1: 시작, 0..n-1: 질문, n: 결과
+  let picks = Array(QUESTIONS.length).fill(null);
+  let locked = false;
+
+  const esc = (t) => t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function render() {
+    if (step < 0) return renderIntro();
+    if (step >= QUESTIONS.length) return renderResult();
+    renderQuestion();
+  }
+
+  function renderIntro() {
+    app.innerHTML = `
+      <section class="screen intro fade">
+        <div>
+          <h1>AI 시대,<br>나의 돌도끼는 무엇일까?</h1>
+          <p>${QUESTIONS.length}개의 상황을 읽고 솔직하게 답해 주세요. 6장의 카드 중 지금 나에게 가장 가까운 한 장을 찾아드려요.</p>
+        </div>
+        <div>
+          <button class="primary" id="start">검사 시작하기</button>
+        </div>
+      </section>`;
+    document.getElementById("start").onclick = () => { step = 0; render(); };
+  }
+
+  function renderQuestion() {
+    const q = QUESTIONS[step];
+    const n = QUESTIONS.length;
+    app.innerHTML = `
+      <section class="screen">
+        <div class="topbar">
+          <button class="back" id="back" aria-label="이전으로">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+        </div>
+        <div class="progress-row">
+          <div class="progress">
+            <div class="bar"><span style="width:${((step + 1) / n) * 100}%"></span></div>
+            <span class="count">${step + 1} / ${n}</span>
+          </div>
+        </div>
+        <div class="question fade" key="${step}">
+          <p class="ctx">${esc(q.ctx)}</p>
+          <p class="stmt">${esc(q.stmt)}</p>
+        </div>
+        <div class="answers">
+          ${ANSWERS.map((a) => `<button class="answer ${a.cls}${picks[step] === a.v ? " picked" : ""}" data-v="${a.v}">${a.label}</button>`).join("")}
+        </div>
+      </section>`;
+    document.getElementById("back").onclick = () => { step -= 1; render(); };
+    app.querySelectorAll(".answer").forEach((b) => {
+      b.onclick = () => {
+        if (locked) return;
+        locked = true;
+        picks[step] = Number(b.dataset.v);
+        b.classList.add("picked");
+        setTimeout(() => { locked = false; step += 1; render(); }, 180);
+      };
+    });
+  }
+
+  function computeScores() {
+    const out = STRENGTHS.map((s, i) => ({ i, sum: 0, max: 0, fives: 0 }));
+    QUESTIONS.forEach((q, k) => {
+      const v = picks[k] ?? 3;
+      out[q.s].sum += v;
+      out[q.s].max += 5;
+      if (v === 5) out[q.s].fives += 1;
+    });
+    return out;
+  }
+
+  function renderResult() {
+    const scores = computeScores();
+    const ranked = [...scores].sort((a, b) => b.sum - a.sum || b.fives - a.fives || a.i - b.i);
+    const top = ranked[0];
+    const second = ranked[1];
+    const s = STRENGTHS[top.i];
+    const pct = (x) => Math.round((x.sum / x.max) * 100);
+
+    app.innerHTML = `
+      <section class="screen result fade">
+        <div class="hero">
+          <p class="eyebrow">테이블에서 이 카드를 집어 주세요</p>
+          <div class="card">
+            <span class="no">CARD</span>
+            <span class="big">${top.i + 1}</span>
+            <span class="name">${esc(s.name)}</span>
+          </div>
+          <h2>${esc(s.name)}</h2>
+          <p class="nick">${esc(s.nick)}</p>
+        </div>
+
+        <div class="panel">
+          <h3>AI 시대에 이 강점이 빛나는 이유</h3>
+          <p>${esc(s.ai)}</p>
+          <p class="note">두 번째로 가까운 카드는 ${second.i + 1}번, ${esc(STRENGTHS[second.i].name)}이에요.</p>
+        </div>
+
+        <div class="panel">
+          <h3>조원에게 들려줄 이야기</h3>
+          <p>${esc(s.talk)}</p>
+        </div>
+
+        <div class="panel">
+          <h3>조별로 이렇게 이야기해 보세요</h3>
+          <ol class="steps">
+            <li><span><b>카드를 펼쳐요.</b> 모두 자기 카드를 테이블 가운데에 내려놓아요.</span></li>
+            <li><span><b>한 명씩 1분.</b> 위의 질문에 답하며 카드를 고른 이유를 이야기해요.</span></li>
+            <li><span><b>빈 카드를 찾아요.</b> 우리 조에 없는 카드는 무엇인지, AI가 그 자리를 채울 수 있을지 이야기해요.</span></li>
+          </ol>
+        </div>
+
+        <div class="panel">
+          <h3>나의 6가지 강점</h3>
+          <div class="scores">
+            ${scores.map((x) => `
+              <div class="score${x.i === top.i ? " top" : ""}">
+                <span class="n">${x.i + 1}</span>
+                <div class="lbl"><span>${esc(STRENGTHS[x.i].name)}</span><div class="track"><i style="width:${pct(x)}%"></i></div></div>
+                <span class="v">${pct(x)}</span>
+              </div>`).join("")}
+          </div>
+        </div>
+
+        <button class="ghost" id="retry">다시 하기</button>
+      </section>`;
+    window.scrollTo(0, 0);
+    document.getElementById("retry").onclick = () => {
+      picks = Array(QUESTIONS.length).fill(null);
+      step = -1;
+      render();
+    };
+  }
+
+  render();
+</script>
+</body>
+</html>
