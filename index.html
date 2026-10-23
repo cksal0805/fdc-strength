@@ -119,7 +119,7 @@
   .card .no { font-size: 13px; font-weight: 700; color: var(--stone); letter-spacing: 0.04em; }
   .card .big { font-size: 64px; font-weight: 800; line-height: 1; color: var(--stone); opacity: .9; }
   .card .name { font-size: 17px; font-weight: 700; line-height: 1.4; text-wrap: balance; }
-  .hero h2 { font-size: 24px; line-height: 1.4; margin: 0 0 8px; text-wrap: balance; letter-spacing: -0.02em; }
+  .hero h2 { font-size: 30px; line-height: 1.4; margin: 0 0 8px; text-wrap: balance; letter-spacing: -0.02em; }
   .hero .nick { font-size: 15px; color: var(--stone); margin: 0; font-weight: 500; }
 
   .panel { background: var(--surface); border-radius: 20px; padding: 22px 20px; }
@@ -161,22 +161,22 @@
 
 <script>
   const STRENGTHS = [
-    { name: "복잡한 문제를 잘게 나누는 사람", nick: "큰 바위를 쪼개 돌도끼를 만드는 사람",
+    { name: "복잡한 문제를 잘게 나누는 사람", nick: "깍둑썰기 장인",
       ai: "AI는 잘게 나뉜 문제에서 가장 잘 일합니다. 문제를 어디서 어떻게 자를지 정하는 일은 여전히 사람의 몫이에요.",
       talk: "최근에 큰 덩어리 일을 쪼개서 풀어낸 경험이 있나요? 어디서부터 잘랐나요?" },
-    { name: "버그를 끝까지 추적하는 사람", nick: "발자국을 끝까지 쫓는 사냥꾼",
+    { name: "버그를 끝까지 추적하는 사람", nick: "버그 스토커",
       ai: "AI가 만든 코드가 늘어날수록, 왜 깨졌는지 끝까지 쫓아가는 사람이 더 귀해집니다.",
       talk: "지금까지 잡은 버그 중 가장 오래 쫓았던 녀석은 무엇이었나요?" },
-    { name: "동료에게 쉽게 설명하는 사람", nick: "모닥불 앞에서 이야기를 전하는 사람",
+    { name: "동료에게 쉽게 설명하는 사람", nick: "인간 번역기",
       ai: "AI 답변은 넘쳐나지만, 상대의 맥락에 맞춰 풀어주는 일은 사람이 합니다. 지식을 팀의 것으로 만드는 힘이에요.",
       talk: "누군가에게 설명하다가 오히려 내가 더 잘 이해하게 된 순간이 있었나요?" },
-    { name: "일단 만들어보며 답을 찾는 사람", nick: "일단 부싯돌부터 부딪쳐보는 사람",
+    { name: "일단 만들어보며 답을 찾는 사람", nick: "일단해봄러",
       ai: "만드는 비용이 거의 0이 된 시대에는, 먼저 만들어보는 사람이 가장 빨리 배웁니다.",
       talk: "일단 만들어봤더니 회의 열 번보다 빨리 답이 나왔던 경험을 들려주세요." },
-    { name: "아무도 묻지 않는 왜를 묻는 사람", nick: "동굴 밖이 왜 밝은지 궁금해하는 사람",
+    { name: "아무도 묻지 않는 왜를 묻는 사람", nick: "왜무새",
       ai: "AI는 '어떻게'에는 답하지만 '왜'는 먼저 묻지 않아요. 방향을 정하는 질문은 사람에게서 나옵니다.",
       talk: "\"근데 이거 왜 해요?\"라는 질문 하나로 방향이 바뀐 적이 있나요?" },
-    { name: "팀이 놓친 부분을 발견하는 사람", nick: "무리가 못 본 맹수를 먼저 알아채는 사람",
+    { name: "팀이 놓친 부분을 발견하는 사람", nick: "옥에티 헌터",
       ai: "AI는 시킨 것만 봅니다. 아무도 시키지 않은 빈틈을 알아보는 눈이 팀과 사용자를 지켜요.",
       talk: "모두가 지나친 걸 혼자 발견했던 순간은 언제였나요? 어떻게 알아챘나요?" },
   ];
@@ -308,8 +308,8 @@
             <span class="big">${top.i + 1}</span>
             <span class="name">${esc(s.name)}</span>
           </div>
-          <h2>${esc(s.name)}</h2>
-          <p class="nick">${esc(s.nick)}</p>
+          <h2>${esc(s.nick)}</h2>
+          <p class="nick">${esc(s.name)}</p>
         </div>
 
         <div class="panel">
